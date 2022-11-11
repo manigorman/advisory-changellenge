@@ -1,0 +1,36 @@
+PODS:
+  - CocoaLumberjack (3.7.4):
+    - CocoaLumberjack/Core (= 3.7.4)
+  - CocoaLumberjack/Core (3.7.4)
+  - InputBarAccessoryView (5.5.0):
+    - InputBarAccessoryView/Core (= 5.5.0)
+  - InputBarAccessoryView/Core (5.5.0)
+  - MessageKit (3.8.0):
+    - InputBarAccessoryView (~> 5.5.0)
+  - SnapKit (5.6.0)
+  - SwiftLint (0.48.0)
+
+DEPENDENCIES:
+  - CocoaLumberjack
+  - MessageKit
+  - SnapKit (~> 5.6.0)
+  - SwiftLint
+
+SPEC REPOS:
+  trunk:
+    - CocoaLumberjack
+    - InputBarAccessoryView
+    - MessageKit
+    - SnapKit
+    - SwiftLint
+
+SPEC CHECKSUMS:
+  CocoaLumberjack: 543c79c114dadc3b1aba95641d8738b06b05b646
+  InputBarAccessoryView: 1d7b0a672b36e370f01f264b3907ef39d03328e3
+  MessageKit: a1ba0c69ebead94029867853eb44dd05b9b3f453
+  SnapKit: e01d52ebb8ddbc333eefe2132acf85c8227d9c25
+  SwiftLint: 284cea64b6187c5d6bd83e9a548a64104d546447
+
+PODFILE CHECKSUM: b10083dac92fc5a0be2aac2058947936adee2d0f
+
+COCOAPODS: 1.10.1
