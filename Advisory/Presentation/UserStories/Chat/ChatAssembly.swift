@@ -15,7 +15,7 @@ final class ChatAssembly {
         
         let presenter = ChatPresenter()
         
-        let controller = ChatViewContoller(presenter: presenter)
+        let controller = ChatViewController(presenter: presenter)
         
         presenter.view = controller
         
