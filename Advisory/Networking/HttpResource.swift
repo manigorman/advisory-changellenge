@@ -43,7 +43,7 @@ struct HttpResource<RequestModel: Encodable, ResponseModel>: Resource {
         // TODO: add params to header
         
         self.request = { [baseUrl] in
-            var url = baseUrl.appendingPathComponent(path)
+            let url = baseUrl.appendingPathComponent(path)
             var request = URLRequest(url: url)
             
             if let requestModel {

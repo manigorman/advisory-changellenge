@@ -77,45 +77,37 @@ final class ChatViewController: MessagesViewController {
     
     let networkService = NetworkingService()
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        let msg = MessageNetworkModel(
-            dialogId: 1,
-            text: "Привет всем участникам Hack & Change!",
-            messageType: .widget,
-            data: "{\"widget\":\"custom data\"}",
-            mediaUrl: "https://cdn-icons-png.flaticon.com/512/945/945244.png"
-        )
-        let message = SendMessageRequestNetworkModel(message: msg)
-        
-//        let socket = URLSession.shared.webSocketTask(with: <#T##URL#>)
-        
-        Task {
-            do {
-                let requestModel = AuthenticationRequestNetworkModel(
-                    login: "iceland",
-                    password: "b809ecd43d9f939b5bbbb629dbb2c8359395801f1e1367ffcd02b6a61c73ea29"
-                )
-                let authResponse = try await networkService.authorize(model: requestModel)
-                print(authResponse.jwtToken)
-                
-                // swiftlint:disable line_length
-                await networkService.changeToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDUwMCwibG9naW4iOiJ0ZXN0VXNlciIsInJvbGUiOiJDTElFTlQiLCJpYXQiOjE2NjgyNzI2MzZ9.eiK8FU0ApZAWpn1KUkr2Pj-yuq4JdC7uZ8KzskJdGpc")
-                
-                foo()
-                
-//                let sendResponse = try await networkService.sendMessage(model: message)
-//                let response = try await networkService.getMessages(model: HistoryMessagesRequestNetworkModel(dialogId: 1, limit: 1))
-//                print(response)
-//                let response = try await networkService.changeWidget(ChangeWidgetRequestNetworkModel(messageId: "a8a0332a-a15c-4f8f-8085-afd867489912", data: "{\"new\":\"data\"}"))
-//                print(response)
-                
-            } catch {
-                print(error.localizedDescription)
-            }
-        }
-     }
+//    override func viewDidAppear(_ animated: Bool) {
+//        super.viewDidAppear(animated)
+//
+//        let msg = MessageNetworkModel(
+//            dialogId: 1,
+//            text: "Привет всем участникам Hack & Change!",
+//            messageType: .widget,
+//            data: "{\"widget\":\"custom data\"}",
+//            mediaUrl: "https://cdn-icons-png.flaticon.com/512/945/945244.png"
+//        )
+//        _ = SendMessageRequestNetworkModel(message: msg)
+//
+//        Task {
+//            do {
+//                let requestModel = AuthenticationRequestNetworkModel(
+//                    login: "iceland",
+//                    password: "iceland_395"
+//                )
+//                let authResponse = try await networkService.authorize(model: requestModel)
+//                print(authResponse.jwtToken)
+//
+//                // swiftlint:disable line_length
+//                await networkService.changeToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDUwMCwibG9naW4iOiJ0ZXN0VXNlciIsInJvbGUiOiJDTElFTlQiLCJpYXQiOjE2NjgyNzI2MzZ9.eiK8FU0ApZAWpn1KUkr2Pj-yuq4JdC7uZ8KzskJdGpc")
+//
+//                foo()
+//
+//            } catch {
+//                print(error.localizedDescription)
+//            }
+//        }
+//     }
     
     @MainActor
     func foo() {
