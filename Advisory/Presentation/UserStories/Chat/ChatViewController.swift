@@ -11,10 +11,10 @@ import InputBarAccessoryView
 import PDFKit
 
 protocol IChatView: AnyObject {
-    
+    func configure(with model: ChatViewController.Model)
 }
 
-let advisor = User(senderId: "1", displayName: "Advisor")
+let advisor = User(senderId: "100395", displayName: "Advisor")
 let me = User(senderId: "0", displayName: "Me")
 
 func generatePDFThumbnail(of thumbnailSize: CGSize, for documentURL: URL) -> UIImage? {
@@ -25,37 +25,15 @@ func generatePDFThumbnail(of thumbnailSize: CGSize, for documentURL: URL) -> UII
 
 final class ChatViewController: MessagesViewController {
     
+    struct Model {
+        var messages: [Message]
+    }
+    
     // Dependencies
     private let presenter: IChatPresenter
     
     // Private
-    private var messages: [Message] = [.init(text: "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
-                                             user: advisor,
-                                             messageId: "1",
-                                             date: Date(timeIntervalSince1970: 1662979536)),
-                                       .init(text: "Привет! Закупай AAPl!авыфоафыораолролфывроларлофыроарлоыраловыфр",
-                                             user: advisor,
-                                             messageId: "1",
-                                             date: Date(timeIntervalSince1970: 1667386012)),
-                                       .init(text: "Привет! Закупай AAPl!авыфоафыораолролфывроларлофыроарлоыраловыфр",
-                                             user: advisor,
-                                             messageId: "1",
-                                             date: Date()),
-                                       .init(text: "Здарова! Ну что там с деньгами? АААААаааааа?",
-                                             user: me,
-                                             messageId: "2",
-                                             date: Date(timeIntervalSince1970: 1668187979)),
-                                       .init(linkItem: MockLinkItem(text: "Привет! Прикрепляю документ на подписание, это договор на наше взаимодействие.",
-                                                                    attributedText: nil,
-                                                                    url: URL(string: "https://www.africau.edu/images/default/sample.pdf")!,
-                                                                    title: "Документ на подпись",
-                                                                    teaser: "10,9 MB",
-                                                                    thumbnailImage: generatePDFThumbnail(of: CGSize(width: 100, height: 100),
-                                                                                                         for: URL(string: "https://www.africau.edu/images/default/sample.pdf")!)!),
-                                             user: advisor, messageId: "323", date: Date()),
-                                       .init(image: UIImage(systemName: "person.fill")!, user: advisor, messageId: "12891", date: Date())
-//                                       .init(custom: [:], user: advisor, messageId: "23903", date: Date())
-    ]
+    private var messages: [Message] = []
     
     private(set) lazy var refreshControl: UIRefreshControl = {
         let control = UIRefreshControl()
@@ -94,66 +72,6 @@ final class ChatViewController: MessagesViewController {
     let networkService = NetworkingService()
     
     var dialogId = -1
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        Task {
-            do {
-                
-                let auth = try await networkService.authorize(model: AuthenticationRequestNetworkModel(login: "iceland", password: "iceland_395"))
-                print(auth)
-                let dialogModel = try await networkService.getDialog()
-                print(dialogModel)
-                await MainActor.run {
-                    self.dialogId = dialogModel.dialogId
-                }
-                
-                print(self.dialogId)
-                
-                var params: [String: String] = [:]
-                
-                params["dialogId"] = String(self.dialogId)
-                
-                let model = try await networkService.getMessages(model: .init(dialogId: self.dialogId, limit: nil), params: params)
-                print(model)
-            } catch {
-                print(error.localizedDescription)
-            }
-        }
-    }
-    
-//    override func viewDidAppear(_ animated: Bool) {
-//        super.viewDidAppear(animated)
-//
-//        let msg = MessageNetworkModel(
-//            dialogId: 1,
-//            text: "Привет всем участникам Hack & Change!",
-//            messageType: .widget,
-//            data: "{\"widget\":\"custom data\"}",
-//            mediaUrl: "https://cdn-icons-png.flaticon.com/512/945/945244.png"
-//        )
-//        _ = SendMessageRequestNetworkModel(message: msg)
-//
-//        Task {
-//            do {
-//                let requestModel = AuthenticationRequestNetworkModel(
-//                    login: "iceland",
-//                    password: "iceland_395"
-//                )
-//                let authResponse = try await networkService.authorize(model: requestModel)
-//                print(authResponse.jwtToken)
-//
-//                // swiftlint:disable line_length
-//                await networkService.changeToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDUwMCwibG9naW4iOiJ0ZXN0VXNlciIsInJvbGUiOiJDTElFTlQiLCJpYXQiOjE2NjgyNzI2MzZ9.eiK8FU0ApZAWpn1KUkr2Pj-yuq4JdC7uZ8KzskJdGpc")
-//
-//                foo()
-//
-//            } catch {
-//                print(error.localizedDescription)
-//            }
-//        }
-//     }
     
     @MainActor
     func foo() {
@@ -260,7 +178,10 @@ final class ChatViewController: MessagesViewController {
 // MARK: - IConversationView
 
 extension ChatViewController: IChatView {
-    
+    func configure(with model: Model) {
+        self.messages = model.messages
+        messagesCollectionView.reloadData()
+    }
 }
 
 // MARK: - MessagesDataSource
@@ -361,6 +282,7 @@ extension ChatViewController: InputBarAccessoryViewDelegate {
             let user = me
             if let str = component as? String {
                 let message = Message(text: str, user: user, messageId: UUID().uuidString, date: Date())
+                presenter.didTapSend(message: message)
                 insertMessage(message)
             } else if let img = component as? UIImage {
                 let message = Message(image: img, user: user, messageId: UUID().uuidString, date: Date())

@@ -33,6 +33,32 @@ final class ChatPresenter {
         self.router = router
         self.networkingService = networkingService
     }
+    
+    private func fetchMessages() {
+        Task {
+                   do {
+                       print(self.dialogId)
+                       
+                       var params: [String: String] = [:]
+                       
+                       params["dialogId"] = String(self.dialogId)
+                       
+                       let model = try await networkingService.getMessages(model: .init(dialogId: self.dialogId, limit: nil), params: params)
+                       print(model)
+                       
+                       await MainActor.run {
+                           self.view?.configure(with: .init(messages: model.messages.map {
+                               Message(text: $0.text,
+                                       user: User(senderId: String($0.sender), displayName: String($0.sender)),
+                                       messageId: $0.messageId,
+                                       date: Date(timeIntervalSince1970: $0.timestamp))
+                           }))
+                       }
+                   } catch {
+                       print(error.localizedDescription)
+                   }
+               }
+    }
 }
 
 // IConversationPresenter
@@ -47,8 +73,7 @@ extension ChatPresenter: IChatPresenter {
                     self.dialogId = dialogModel.dialogId
                 }
                 
-                let model = try await networkingService.getMessages(model: .init(dialogId: 11, limit: nil))
-                print(model)
+                fetchMessages()
             } catch {
                 print(error.localizedDescription)
             }
@@ -62,25 +87,15 @@ extension ChatPresenter: IChatPresenter {
     func didTapSend(message: Message) {
         Task {
             do {
-
-                var s = ""
-                switch message.kind {
-                case .text(let str):
-                    print(str)
-                    s = str
-                default:
-                    break
+                guard case let .text(text) = message.kind else {
+                    return
                 }
-
-                let dialogModel = try await networkingService.sendMessage(model: .init(message: .init(dialogId: 11,
-                                                                                                      text: s,
+                
+                let dialogModel = try await networkingService.sendMessage(model: .init(message: .init(dialogId: dialogId,
+                                                                                                      text: text,
                                                                                                       messageType: .text,
                                                                                                       data: nil,
                                                                                                       mediaUrl: nil)))
-                print("======", dialogModel)
-
-                let model = try await networkingService.getMessages(model: .init(dialogId: dialogId, limit: 20))
-                print(model)
             } catch {
                 print(error.localizedDescription)
             }

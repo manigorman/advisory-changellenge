@@ -17,6 +17,7 @@ actor NetworkingService {
     }
     
     // MARK: - API
+    @discardableResult
     func sendMessage(model: SendMessageRequestNetworkModel) async throws -> SendMessageResponseNetworkModel {
         
         let resource = HttpResource<SendMessageRequestNetworkModel,
@@ -45,7 +46,7 @@ actor NetworkingService {
         return responseModel
     }
     
-    func getMessages(model: HistoryMessagesRequestNetworkModel, params: [String: String]) async throws -> HistoryMessagesResponseNetworkModel {
+    func getMessages(model: HistoryMessagesRequestNetworkModel, params: [String: String] = [:]) async throws -> HistoryMessagesResponseNetworkModel {
         let resource = HttpResource<HistoryMessagesRequestNetworkModel, HistoryMessagesResponseNetworkModel>(
             requestModel: model,
             httpMethodType: .get,
