@@ -15,7 +15,10 @@ final class ChatAssembly {
         
         let router = ChatRouter()
         
-        let presenter = ChatPresenter(router: router)
+        let networkingService = NetworkingService()
+        
+        let presenter = ChatPresenter(router: router,
+        networkingService: networkingService)
         
         let controller = ChatViewController(presenter: presenter)
         
@@ -24,5 +27,4 @@ final class ChatAssembly {
         
         return controller
     }
-    
 }

@@ -13,7 +13,10 @@ final class LogInAssembly {
     
     func assemble(authCoordinator: AuthCoordinator) -> UIViewController {
         
-        let presenter = LogInPresenter(coordinator: authCoordinator)
+        let networkingService = NetworkingService()
+        
+        let presenter = LogInPresenter(coordinator: authCoordinator,
+        networkingService: networkingService)
         
         let controller = LogInViewController(presenter: presenter)
         

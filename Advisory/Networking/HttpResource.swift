@@ -37,7 +37,7 @@ struct HttpResource<RequestModel: Encodable, ResponseModel>: Resource {
         self.httpMethodType = httpMethodType
         
         var finalHeaders = headers
-        if let token {
+        if let token = token {
             finalHeaders["Authorization"] = "Bearer \(token)"
         }
         // TODO: add params to header
@@ -46,7 +46,7 @@ struct HttpResource<RequestModel: Encodable, ResponseModel>: Resource {
             let url = baseUrl.appendingPathComponent(path)
             var request = URLRequest(url: url)
             
-            if let requestModel {
+            if let requestModel = requestModel {
                 if shouldUseParams {
                     var components = URLComponents()
                     components.scheme = "https"

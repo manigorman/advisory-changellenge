@@ -16,7 +16,7 @@ final class LogInPresenter {
     
     // Dependencies
     weak var view: ILogInView?
-    
+    private let networkingService: NetworkingService
     private let coordinator: IAuthCoordinator
     
     // Private
@@ -25,8 +25,10 @@ final class LogInPresenter {
     
     // MARK: - Initialization
     
-    init(coordinator: IAuthCoordinator) {
+    init(coordinator: IAuthCoordinator,
+         networkingService: NetworkingService) {
         self.coordinator = coordinator
+        self.networkingService = networkingService
     }
     
     // MARK: - Private
@@ -40,13 +42,21 @@ extension LogInPresenter: ILogInPresenter {
     }
      
     func didTapLogIn(email: String, password: String) {
-//        guard validationService.isValid(email, type: .email),
-//              validationService.isValid(password, type: .password) else {
-//            view?.showAlert(message: "Wrong email or password")
-//            return
-//        }
         
         view?.shouldActivityIndicatorWorking(true)
-        coordinator.showTab()
+        
+        Task {
+            do {
+                let token = try await networkingService.authorize(model: .init(login: email, password: password))
+                
+                print(token)
+                
+                await MainActor.run {
+                    coordinator.showTab()
+                }
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
     }
 }
