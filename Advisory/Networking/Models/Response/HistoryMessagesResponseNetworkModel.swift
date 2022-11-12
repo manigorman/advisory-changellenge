@@ -12,7 +12,7 @@ struct CachedMessageResponseNetworkModel: Decodable {
     let text: String
     let data: String?
     let messageType: MessageTypeNetworkModel
-    let mediaUrl: String
+    let mediaUrl: String?
     let sender: Int
     let recipient: Int
     let dialogId: Int

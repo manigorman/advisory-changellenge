@@ -40,14 +40,11 @@ actor NetworkingService {
         return responseModel
     }
     
-    func getMessages(model: HistoryMessagesRequestNetworkModel) async throws -> HistoryMessagesResponseNetworkModel {
+    func getMessages(model: HistoryMessagesRequestNetworkModel, params: [String: String]) async throws -> HistoryMessagesResponseNetworkModel {
         let resource = HttpResource<HistoryMessagesRequestNetworkModel, HistoryMessagesResponseNetworkModel>(
             requestModel: model,
             httpMethodType: .get,
-            params: [
-                "dialogId": "1",
-                "limit": "1"
-            ],
+            params: params,
             path: "chat/history",
             token: token,
             shouldUseParams: true
