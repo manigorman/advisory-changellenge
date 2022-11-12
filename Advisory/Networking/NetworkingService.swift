@@ -12,6 +12,18 @@ actor NetworkingService {
     
     private let networkCaller = NetworkingServiceStrategy()
     
+//    private func sha256(data : Data) -> Data {
+//        var hash = [UInt8](repeating: 0,  count: Int(CC_SHA256_DIGEST_LENGTH))
+//        data.withUnsafeBytes {
+//            _ = CC_SHA256($0.baseAddress, CC_LONG(data.count), &hash)
+//        }
+//        return Data(hash)
+//    }
+    
+    func changeToken(_ token: String) {
+        self.token = token
+    }
+    
     // MARK: - API
     func sendMessage(model: SendMessageRequestNetworkModel) async throws -> SendMessageResponseNetworkModel {
         
@@ -23,7 +35,7 @@ actor NetworkingService {
     func authorize(model: AuthenticationRequestNetworkModel) async throws -> AuthenticationResponseNetworkModel {
         
         let resource = HttpResource<AuthenticationRequestNetworkModel, AuthenticationResponseNetworkModel>(
-            requestModel: nil,
+            requestModel: model,
             httpMethodType: .post,
             path: "auth"
         )
@@ -38,8 +50,13 @@ actor NetworkingService {
         let resource = HttpResource<HistoryMessagesRequestNetworkModel, HistoryMessagesResponseNetworkModel>(
             requestModel: model,
             httpMethodType: .get,
+            params: [
+                "dialogId": "1",
+                "limit": "1"
+            ],
             path: "chat/history",
-            token: token
+            token: token,
+            shouldUseParams: true
         )
         
         return try await networkCaller.performNetworkRequest(with: resource)
@@ -47,7 +64,7 @@ actor NetworkingService {
     
     func getDialog() async throws -> GetDialogResponseNetworkModel {
         let resource = HttpResource<Dummy, GetDialogResponseNetworkModel>(
-            requestModel: Dummy(),
+            requestModel: nil,
             httpMethodType: .get,
             path: "chat/dialog",
             token: token
@@ -56,14 +73,14 @@ actor NetworkingService {
         return try await networkCaller.performNetworkRequest(with: resource)
     }
     
-    func changeWidget(_ model: ChangeWidgetRequestNetworkModel) async throws -> Dummy {
-        let resource = HttpResource<ChangeWidgetRequestNetworkModel, Dummy>(
+    func changeWidget(_ model: ChangeWidgetRequestNetworkModel) async throws {
+        let resource = HttpResource<ChangeWidgetRequestNetworkModel, Never>(
             requestModel: model,
             httpMethodType: .post,
             path: "chat/message/update",
             token: token
         )
         
-        return try await networkCaller.performNetworkRequest(with: resource)
+        try await networkCaller.performNetworkRequestWithoutResponseModel(with: resource)
     }
 }

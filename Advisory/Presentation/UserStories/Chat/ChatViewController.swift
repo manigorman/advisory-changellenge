@@ -89,23 +89,38 @@ final class ChatViewController: MessagesViewController {
         )
         let message = SendMessageRequestNetworkModel(message: msg)
         
+//        let socket = URLSession.shared.webSocketTask(with: <#T##URL#>)
+        
         Task {
             do {
                 let requestModel = AuthenticationRequestNetworkModel(
-                    login: "testUser",
-                    password: "872e4e50ce9990d8b041330c47c9ddd11bec6b503ae9386a99da8584e9bb12c4"
+                    login: "iceland",
+                    password: "b809ecd43d9f939b5bbbb629dbb2c8359395801f1e1367ffcd02b6a61c73ea29"
                 )
                 let authResponse = try await networkService.authorize(model: requestModel)
                 print(authResponse.jwtToken)
                 
-                let sendResponse = try await networkService.sendMessage(model: message)
-                print(sendResponse)
+                // swiftlint:disable line_length
+                await networkService.changeToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDUwMCwibG9naW4iOiJ0ZXN0VXNlciIsInJvbGUiOiJDTElFTlQiLCJpYXQiOjE2NjgyNzI2MzZ9.eiK8FU0ApZAWpn1KUkr2Pj-yuq4JdC7uZ8KzskJdGpc")
+                
+                foo()
+                
+//                let sendResponse = try await networkService.sendMessage(model: message)
+//                let response = try await networkService.getMessages(model: HistoryMessagesRequestNetworkModel(dialogId: 1, limit: 1))
+//                print(response)
+//                let response = try await networkService.changeWidget(ChangeWidgetRequestNetworkModel(messageId: "a8a0332a-a15c-4f8f-8085-afd867489912", data: "{\"new\":\"data\"}"))
+//                print(response)
                 
             } catch {
                 print(error.localizedDescription)
             }
         }
      }
+    
+    @MainActor
+    func foo() {
+        
+    }
     
     // MARK: - Actions
     

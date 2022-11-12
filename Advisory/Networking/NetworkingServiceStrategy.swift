@@ -25,6 +25,18 @@ final class NetworkingServiceStrategy {
         
         return model
     }
+    
+    func performNetworkRequestWithoutResponseModel<RequestModel: Encodable>(with resource: HttpResource<RequestModel, Never>) async throws {
+        let (_, response) = try await URLSession.shared.data(for: resource.request)
+
+        guard let response = response as? HTTPURLResponse else {
+            throw NetworkError.notHttp
+        }
+        
+        guard response.statusCode == 200 else {
+            throw NetworkError.someErrror
+        }
+    }
 }
 
 enum NetworkError: Error {
