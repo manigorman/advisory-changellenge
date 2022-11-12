@@ -12,7 +12,16 @@ enum HttpMethodType: String {
     case post = "POST"
 }
 
-struct HttpResource<RequestModel: Encodable, ResponseModel: Decodable> {
+protocol Resource {
+    associatedtype RequestModel
+    associatedtype ResponseModel
+}
+
+struct HttpResource<RequestModel: Encodable, ResponseModel>: Resource {
+    
+    typealias RequestModel = RequestModel
+    typealias ResponseModel = ResponseModel
+    
     let request: URLRequest
     private let httpMethodType: HttpMethodType
     private let baseUrl: URL = URL(string: "https://hack.invest-open.ru")!
@@ -22,7 +31,8 @@ struct HttpResource<RequestModel: Encodable, ResponseModel: Decodable> {
          headers: [String: String] = [:],
          params: [String: String] = [:],
          path: String,
-         token: String? = nil
+         token: String? = nil,
+         shouldUseParams: Bool = false
     ) {
         self.httpMethodType = httpMethodType
         
@@ -33,12 +43,26 @@ struct HttpResource<RequestModel: Encodable, ResponseModel: Decodable> {
         // TODO: add params to header
         
         self.request = { [baseUrl] in
-            let url = baseUrl.appendingPathComponent(path)
+            var url = baseUrl.appendingPathComponent(path)
             var request = URLRequest(url: url)
             
             if let requestModel {
-                request.httpBody = try? JSONEncoder().encode(requestModel)
-                finalHeaders["Content-Type"] = "application/json"
+                if shouldUseParams {
+                    var components = URLComponents()
+                    components.scheme = "https"
+                    components.host = "hack.invest-open.ru"
+                    components.path = "/" + path
+                    
+                    components.queryItems = params.map { (key, value) in
+                        URLQueryItem(name: key, value: value)
+                    }
+                    
+                    let compUrl = components.url!
+                    request = URLRequest(url: compUrl)
+                } else {
+                    request.httpBody = try? JSONEncoder().encode(requestModel)
+                    finalHeaders["Content-Type"] = "application/json"
+                }
             }
             
             request.httpMethod = httpMethodType.rawValue
