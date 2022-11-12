@@ -12,14 +12,6 @@ actor NetworkingService {
     
     private let networkCaller = NetworkingServiceStrategy()
     
-//    private func sha256(data : Data) -> Data {
-//        var hash = [UInt8](repeating: 0,  count: Int(CC_SHA256_DIGEST_LENGTH))
-//        data.withUnsafeBytes {
-//            _ = CC_SHA256($0.baseAddress, CC_LONG(data.count), &hash)
-//        }
-//        return Data(hash)
-//    }
-    
     func changeToken(_ token: String) {
         self.token = token
     }
@@ -34,8 +26,10 @@ actor NetworkingService {
     
     func authorize(model: AuthenticationRequestNetworkModel) async throws -> AuthenticationResponseNetworkModel {
         
+        let encryptedModel = AuthenticationRequestNetworkModel(login: model.login, password: model.password.sha256())
+
         let resource = HttpResource<AuthenticationRequestNetworkModel, AuthenticationResponseNetworkModel>(
-            requestModel: model,
+            requestModel: encryptedModel,
             httpMethodType: .post,
             path: "auth"
         )
