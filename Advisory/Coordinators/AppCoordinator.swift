@@ -8,7 +8,6 @@
 import UIKit
 
 protocol IAppCoordinator: AnyObject {
-    func logOut()
     func logIn()
 }
 
@@ -26,23 +25,23 @@ final class AppCoordinator: Coordinator {
     // MARK: - Coordinator
     
     func start() {
-//        if FirebaseAuth.Auth.auth().currentUser != nil {
+        if isLoggedIn {
             showTab()
-//        } else {
-//            showAuth()
-//        }
+        } else {
+            showAuth()
+        }
     }
     
-//    func showAuth() {
-//        let authCoordinator = AuthCoordinator(parentCoordinator: self,
-//                                              navigationController: navigationController)
-//        authCoordinator.start()
-//        childCoordinators.append(authCoordinator)
-//    }
+    func showAuth() {
+        let authCoordinator = AuthCoordinator(parentCoordinator: self,
+                                              navigationController: navigationController)
+        authCoordinator.start()
+        childCoordinators.append(authCoordinator)
+    }
     
     func showTab() {
         let tabCoordinator = TabBarCoordinator(parentCoordinator: self,
-                                            navigationController: navigationController)
+                                               navigationController: navigationController)
         tabCoordinator.start()
         childCoordinators.append(tabCoordinator)
     }
@@ -56,7 +55,7 @@ extension AppCoordinator: IAppCoordinator {
         for coordinator in childCoordinators {
             coordinator.finish()
         }
-//        showAuth()
+        //        showAuth()
     }
     
     func logIn() {

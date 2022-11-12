@@ -21,11 +21,6 @@ final class TabBarAssembly {
                                          unselected: UIImage(systemName: "message"),
                                          title: "Chat")
 
-//        let profileVC = createNavController(with: ().assemble(),
-//                                            selected: UIImage(systemName: "person.fill"),
-//                                            unselected: UIImage(systemName: "person"),
-//                                            title: "Profile")
-
         controller.setControllers([chatsVC], animated: false)
         
         presenter.view = controller

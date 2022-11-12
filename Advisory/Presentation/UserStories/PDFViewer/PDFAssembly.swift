@@ -1,28 +1,27 @@
 //
-//  ChatAssembly.swift
+//  PDFAssembly.swift
 //  Advisory
 //
-//  Created by Igor Manakov on 11.11.2022.
+//  Created by Igor Manakov on 12.11.2022.
 //
 
 import UIKit
 
-final class ChatAssembly {
+final class PDFAssembly {
     
     // MARK: - Public
     
     func assemble() -> UIViewController {
         
-        let router = ChatRouter()
+        let router = PDFRouter()
         
-        let presenter = ChatPresenter(router: router)
+        let presenter = PDFPresenter(router: router)
         
-        let controller = ChatViewController(presenter: presenter)
+        let controller = PDFViewController(presenter: presenter)
         
         presenter.view = controller
         router.transitionHandler = controller
         
         return controller
     }
-    
 }
