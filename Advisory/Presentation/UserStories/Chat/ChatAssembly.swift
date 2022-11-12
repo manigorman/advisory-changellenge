@@ -13,13 +13,18 @@ final class ChatAssembly {
     
     func assemble() -> UIViewController {
         
-        let presenter = ChatPresenter()
+        let router = ChatRouter()
+        
+        let networkingService = NetworkingService()
+        
+        let presenter = ChatPresenter(router: router,
+        networkingService: networkingService)
         
         let controller = ChatViewController(presenter: presenter)
         
         presenter.view = controller
+        router.transitionHandler = controller
         
         return controller
     }
-    
 }

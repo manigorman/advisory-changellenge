@@ -8,37 +8,32 @@
 import UIKit
 import MessageKit
 import InputBarAccessoryView
+import PDFKit
 
 protocol IChatView: AnyObject {
-    
+    func configure(with model: ChatViewController.Model)
 }
 
-let advisor = User(senderId: "1", displayName: "Advisor Михаил")
+let advisor = User(senderId: "100395", displayName: "Advisor")
 let me = User(senderId: "0", displayName: "Me")
 
+func generatePDFThumbnail(of thumbnailSize: CGSize, for documentURL: URL) -> UIImage? {
+    let pdfDocument = PDFDocument(url: documentURL)
+    let pdfDocumentPage = pdfDocument?.page(at: 0)
+    return pdfDocumentPage?.thumbnail(of: thumbnailSize, for: PDFDisplayBox.trimBox)
+}
+
 final class ChatViewController: MessagesViewController {
+    
+    struct Model {
+        var messages: [Message]
+    }
     
     // Dependencies
     private let presenter: IChatPresenter
     
     // Private
-    
-    private var messages: [Message] = [.init(text: "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
-                                             user: advisor,
-                                             messageId: "1",
-                                             date: Date(timeIntervalSince1970: 1668019840)),
-                                       .init(text: "Привет! Закупай AAPl!авыфоафыораолролфывроларлофыроарлоыраловыфр",
-                                             user: advisor,
-                                             messageId: "1",
-                                             date: Date(timeIntervalSince1970: 1668210669)),
-                                       .init(text: "Привет! Закупай AAPl!авыфоафыораолролфывроларлофыроарлоыраловыфр",
-                                             user: advisor,
-                                             messageId: "1",
-                                             date: Date()),
-                                       .init(text: "Здарова! Ну что там с деньгами? АААААаааааа?",
-                                             user: me,
-                                             messageId: "2",
-                                             date: Date(timeIntervalSince1970: 1668187979))]
+    private var messages: [Message] = []
     
     private(set) lazy var refreshControl: UIRefreshControl = {
         let control = UIRefreshControl()
@@ -68,7 +63,6 @@ final class ChatViewController: MessagesViewController {
         presenter.viewDidLoad()
         
         setUpUI()
-        setUpConstraints()
         setUpDelegates()
         
         configureMessageCollectionView()
@@ -78,66 +72,6 @@ final class ChatViewController: MessagesViewController {
     let networkService = NetworkingService()
     
     var dialogId = -1
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        Task {
-            do {
-                
-                let auth = try await networkService.authorize(model: AuthenticationRequestNetworkModel(login: "iceland", password: "iceland_395"))
-                print(auth)
-                let dialogModel = try await networkService.getDialog()
-                print(dialogModel)
-                await MainActor.run {
-                    self.dialogId = dialogModel.dialogId
-                }
-                
-                print(self.dialogId)
-                
-                var params: [String: String] = [:]
-                
-                params["dialogId"] = String(self.dialogId)
-                
-                let model = try await networkService.getMessages(model: .init(dialogId: self.dialogId, limit: nil), params: params)
-                print(model)
-            } catch {
-                print(error.localizedDescription)
-            }
-        }
-    }
-    
-//    override func viewDidAppear(_ animated: Bool) {
-//        super.viewDidAppear(animated)
-//
-//        let msg = MessageNetworkModel(
-//            dialogId: 1,
-//            text: "Привет всем участникам Hack & Change!",
-//            messageType: .widget,
-//            data: "{\"widget\":\"custom data\"}",
-//            mediaUrl: "https://cdn-icons-png.flaticon.com/512/945/945244.png"
-//        )
-//        _ = SendMessageRequestNetworkModel(message: msg)
-//
-//        Task {
-//            do {
-//                let requestModel = AuthenticationRequestNetworkModel(
-//                    login: "iceland",
-//                    password: "iceland_395"
-//                )
-//                let authResponse = try await networkService.authorize(model: requestModel)
-//                print(authResponse.jwtToken)
-//
-//                // swiftlint:disable line_length
-//                await networkService.changeToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDUwMCwibG9naW4iOiJ0ZXN0VXNlciIsInJvbGUiOiJDTElFTlQiLCJpYXQiOjE2NjgyNzI2MzZ9.eiK8FU0ApZAWpn1KUkr2Pj-yuq4JdC7uZ8KzskJdGpc")
-//
-//                foo()
-//
-//            } catch {
-//                print(error.localizedDescription)
-//            }
-//        }
-//     }
     
     @MainActor
     func foo() {
@@ -173,10 +107,6 @@ final class ChatViewController: MessagesViewController {
         }
     }
     
-    private func setUpConstraints() {
-        
-    }
-    
     private func setUpDelegates() {
         messagesCollectionView.messagesDataSource = self
         messagesCollectionView.messagesLayoutDelegate = self
@@ -185,51 +115,34 @@ final class ChatViewController: MessagesViewController {
     }
     
     func configureMessageCollectionView() {
-      messagesCollectionView.messagesDataSource = self
-      messagesCollectionView.messageCellDelegate = self
-
-      scrollsToLastItemOnKeyboardBeginsEditing = true // default false
-//      maintainPositionOnInputBarHeightChanged = true // default false
-      showMessageTimestampOnSwipeLeft = true // default false
-
-      messagesCollectionView.refreshControl = refreshControl
+        messagesCollectionView.messagesDataSource = self
+        messagesCollectionView.messageCellDelegate = self
+        
+        scrollsToLastItemOnKeyboardBeginsEditing = true
+        maintainPositionOnKeyboardFrameChanged = true
+        showMessageTimestampOnSwipeLeft = true
+        
+        messagesCollectionView.refreshControl = refreshControl
     }
-
+    
     func configureMessageInputBar() {
-      messageInputBar.delegate = self
+        messageInputBar.delegate = self
         messageInputBar.inputTextView.tintColor = TextColorScheme.foreground
         messageInputBar.sendButton.setTitleColor(ApplicationColorScheme.accent, for: .normal)
-      messageInputBar.sendButton.setTitleColor(
-        ApplicationColorScheme.accent.withAlphaComponent(0.3),
-        for: .highlighted)
+        messageInputBar.sendButton.setTitleColor(
+            ApplicationColorScheme.accent.withAlphaComponent(0.3),
+            for: .highlighted)
     }
-
+    
     func cellTopLabelAttributedText(for message: MessageType, at indexPath: IndexPath) -> NSAttributedString? {
         if indexPath.section % 3 == 0 {
             return NSAttributedString(
-                string: MessageKitDateFormatter.shared.string(from: message.sentDate),
+                string: DateFormatter.ruRuLong(message.sentDate).string(from: message.sentDate),
                 attributes: [
                     NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 10),
                     NSAttributedString.Key.foregroundColor: UIColor.darkGray])
         }
         return nil
-    }
-    
-    //    func messageTopLabelAttributedText(for message: MessageType, at _: IndexPath) -> NSAttributedString? {
-    //        if !isFromCurrentSender(message: message) {
-    //            let name = message.sender.displayName
-    //            return NSAttributedString(
-    //                string: name,
-    //                attributes: [NSAttributedString.Key.font: UIFont.preferredFont(forTextStyle: .caption1)])
-    //        }
-    //        return nil
-    //    }
-    
-    func messageBottomLabelAttributedText(for message: MessageType, at _: IndexPath) -> NSAttributedString? {
-        let dateString = DateFormatter.mediumFormatter.string(from: message.sentDate)
-        return NSAttributedString(
-            string: dateString,
-            attributes: [NSAttributedString.Key.font: UIFont.preferredFont(forTextStyle: .caption2)])
     }
     
     func insertMessage(_ message: Message) {
@@ -254,12 +167,21 @@ final class ChatViewController: MessagesViewController {
         
         return messagesCollectionView.indexPathsForVisibleItems.contains(lastIndexPath)
     }
+    
+    func messageTimestampLabelAttributedText(for message: MessageType, at indexPath: IndexPath) -> NSAttributedString? {
+        let messageDate = message.sentDate
+        let dateString = DateFormatter.mediumFormatter.string(from: messageDate)
+        return NSAttributedString(string: dateString, attributes: [.font: UIFont.systemFont(ofSize: 12)])
+    }
 }
 
 // MARK: - IConversationView
 
 extension ChatViewController: IChatView {
-    
+    func configure(with model: Model) {
+        self.messages = model.messages
+        messagesCollectionView.reloadData()
+    }
 }
 
 // MARK: - MessagesDataSource
@@ -276,6 +198,10 @@ extension ChatViewController: MessagesDataSource {
     func numberOfSections(in messagesCollectionView: MessagesCollectionView) -> Int {
         messages.count
     }
+    
+//    func customCell(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> UICollectionViewCell {
+//        return UICollectionViewCell(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+//    }
 }
 
 // MARK: - MessagesDisplayDelegate
@@ -290,32 +216,20 @@ extension ChatViewController: MessagesDisplayDelegate {
     }
     
     func messageStyle(for message: MessageType, at _: IndexPath, in _: MessagesCollectionView) -> MessageStyle {
-        let tail: MessageStyle.TailCorner = isFromCurrentSender(message: message) ? .bottomRight : .bottomLeft
-        return .bubbleTail(tail, .curved)
+        switch message.kind {
+        case .custom:
+            return .none
+        default:
+            let tail: MessageStyle.TailCorner = isFromCurrentSender(message: message) ? .bottomRight : .bottomLeft
+            return .bubbleTail(tail, .curved)
+        }
     }
-    
-    //    func configureAvatarView(_ avatarView: AvatarView, for message: MessageType, at _: IndexPath, in _: MessagesCollectionView) {
-    //      let avatar = SampleData.shared.getAvatarFor(sender: message.sender)
-    //      avatarView.set(avatar: avatar)
-    //    }
 }
 
 // MARK: - MessagesLayoutDelegate
 
 extension ChatViewController: MessagesLayoutDelegate {
     func cellTopLabelHeight(for _: MessageType, at _: IndexPath, in _: MessagesCollectionView) -> CGFloat {
-        18
-    }
-    
-    func cellBottomLabelHeight(for _: MessageType, at _: IndexPath, in _: MessagesCollectionView) -> CGFloat {
-        17
-    }
-    
-    func messageTopLabelHeight(for _: MessageType, at _: IndexPath, in _: MessagesCollectionView) -> CGFloat {
-        20
-    }
-    
-    func messageBottomLabelHeight(for _: MessageType, at _: IndexPath, in _: MessagesCollectionView) -> CGFloat {
         16
     }
 }
@@ -368,6 +282,7 @@ extension ChatViewController: InputBarAccessoryViewDelegate {
             let user = me
             if let str = component as? String {
                 let message = Message(text: str, user: user, messageId: UUID().uuidString, date: Date())
+                presenter.didTapSend(message: message)
                 insertMessage(message)
             } else if let img = component as? UIImage {
                 let message = Message(image: img, user: user, messageId: UUID().uuidString, date: Date())
@@ -378,74 +293,36 @@ extension ChatViewController: InputBarAccessoryViewDelegate {
 }
 
 extension ChatViewController: MessageCellDelegate {
-  func didTapAvatar(in _: MessageCollectionViewCell) {
-    print("Avatar tapped")
-  }
-
-  func didTapMessage(in _: MessageCollectionViewCell) {
-    print("Message tapped")
-  }
-
-  func didTapImage(in _: MessageCollectionViewCell) {
-    print("Image tapped")
-  }
-
-  func didTapCellTopLabel(in _: MessageCollectionViewCell) {
-    print("Top cell label tapped")
-  }
-
-  func didTapCellBottomLabel(in _: MessageCollectionViewCell) {
-    print("Bottom cell label tapped")
-  }
-
-  func didTapMessageTopLabel(in _: MessageCollectionViewCell) {
-    print("Top message label tapped")
-  }
-
-  func didTapMessageBottomLabel(in _: MessageCollectionViewCell) {
-    print("Bottom label tapped")
-  }
-
-//  func didTapPlayButton(in cell: AudioMessageCell) {
-//    guard
-//      let indexPath = messagesCollectionView.indexPath(for: cell),
-//      let message = messagesCollectionView.messagesDataSource?.messageForItem(at: indexPath, in: messagesCollectionView)
-//    else {
-//      print("Failed to identify message when audio cell receive tap gesture")
-//      return
-//    }
-//    guard audioController.state != .stopped else {
-      // There is no audio sound playing - prepare to start playing for given audio message
-//      audioController.playSound(for: message, in: cell)
-//      return
-//    }
-//    if audioController.playingMessage?.messageId == message.messageId {
-      // tap occur in the current cell that is playing audio sound
-//      if audioController.state == .playing {
-//        audioController.pauseSound(for: message, in: cell)
-//      } else {
-//        audioController.resumeSound()
-//      }
-//    } else {
-      // tap occur in a difference cell that the one is currently playing sound. First stop currently playing and start the sound for given message
-//      audioController.stopAnyOngoingPlaying()
-//      audioController.playSound(for: message, in: cell)
-//    }
-//  }
-
-  func didStartAudio(in _: AudioMessageCell) {
-    print("Did start playing audio sound")
-  }
-
-  func didPauseAudio(in _: AudioMessageCell) {
-    print("Did pause audio sound")
-  }
-
-  func didStopAudio(in _: AudioMessageCell) {
-    print("Did stop audio sound")
-  }
-
-  func didTapAccessoryView(in _: MessageCollectionViewCell) {
-    print("Accessory view tapped")
-  }
+    func didTapAvatar(in _: MessageCollectionViewCell) {
+        print("Avatar tapped")
+    }
+    
+    func didTapMessage(in _: MessageCollectionViewCell) {
+        print("Message tapped")
+        presenter.didTapPDF()
+    }
+    
+    func didTapImage(in _: MessageCollectionViewCell) {
+        print("Image tapped")
+    }
+    
+    func didTapCellTopLabel(in _: MessageCollectionViewCell) {
+        print("Top cell label tapped")
+    }
+    
+    func didTapCellBottomLabel(in _: MessageCollectionViewCell) {
+        print("Bottom cell label tapped")
+    }
+    
+    func didTapMessageTopLabel(in _: MessageCollectionViewCell) {
+        print("Top message label tapped")
+    }
+    
+    func didTapMessageBottomLabel(in _: MessageCollectionViewCell) {
+        print("Bottom label tapped")
+    }
+    
+    func didTapAccessoryView(in _: MessageCollectionViewCell) {
+        print("Accessory view tapped")
+    }
 }

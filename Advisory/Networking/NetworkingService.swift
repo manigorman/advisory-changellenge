@@ -8,22 +8,28 @@
 import Foundation
 
 actor NetworkingService {
-    private var token: String = ""
+    static private var token: String = ""
     
     private let networkCaller = NetworkingServiceStrategy()
     
     func changeToken(_ token: String) {
-        self.token = token
+        Self.token = token
     }
     
     // MARK: - API
+    @discardableResult
     func sendMessage(model: SendMessageRequestNetworkModel) async throws -> SendMessageResponseNetworkModel {
         
-        let resource = HttpResource<SendMessageRequestNetworkModel, SendMessageResponseNetworkModel>(requestModel: model, httpMethodType: .post, path: "message/send", token: token)
+        let resource = HttpResource<SendMessageRequestNetworkModel,
+                                    SendMessageResponseNetworkModel>(requestModel: model,
+                                                                     httpMethodType: .post,
+                                                                     path: "message/send",
+                                                                     token: Self.token)
         
         return try await networkCaller.performNetworkRequest(with: resource)
     }
     
+    @discardableResult
     func authorize(model: AuthenticationRequestNetworkModel) async throws -> AuthenticationResponseNetworkModel {
         
         let encryptedModel = AuthenticationRequestNetworkModel(login: model.login, password: model.password.sha256())
@@ -36,17 +42,17 @@ actor NetworkingService {
         
         let responseModel = try await networkCaller.performNetworkRequest(with: resource)
         
-        token = responseModel.jwtToken
+        Self.token = responseModel.jwtToken
         return responseModel
     }
     
-    func getMessages(model: HistoryMessagesRequestNetworkModel, params: [String: String]) async throws -> HistoryMessagesResponseNetworkModel {
+    func getMessages(model: HistoryMessagesRequestNetworkModel, params: [String: String] = [:]) async throws -> HistoryMessagesResponseNetworkModel {
         let resource = HttpResource<HistoryMessagesRequestNetworkModel, HistoryMessagesResponseNetworkModel>(
             requestModel: model,
             httpMethodType: .get,
             params: params,
             path: "chat/history",
-            token: token,
+            token: Self.token,
             shouldUseParams: true
         )
         
@@ -58,7 +64,7 @@ actor NetworkingService {
             requestModel: nil,
             httpMethodType: .get,
             path: "chat/dialog",
-            token: token
+            token: Self.token
         )
         
         return try await networkCaller.performNetworkRequest(with: resource)
@@ -69,7 +75,7 @@ actor NetworkingService {
             requestModel: model,
             httpMethodType: .post,
             path: "chat/message/update",
-            token: token
+            token: Self.token
         )
         
         try await networkCaller.performNetworkRequestWithoutResponseModel(with: resource)

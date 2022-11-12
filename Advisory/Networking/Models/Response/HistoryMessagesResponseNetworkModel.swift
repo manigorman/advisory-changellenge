@@ -16,7 +16,7 @@ struct CachedMessageResponseNetworkModel: Decodable {
     let sender: Int
     let recipient: Int
     let dialogId: Int
-    let timestamp: Decimal
+    let timestamp: Double
 }
 
 struct HistoryMessagesResponseNetworkModel: Decodable {
