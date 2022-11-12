@@ -77,6 +77,36 @@ final class ChatViewController: MessagesViewController {
     
     let networkService = NetworkingService()
     
+    var dialogId = -1
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        Task {
+            do {
+                
+                let auth = try await networkService.authorize(model: AuthenticationRequestNetworkModel(login: "iceland", password: "iceland_395"))
+                print(auth)
+                let dialogModel = try await networkService.getDialog()
+                print(dialogModel)
+                await MainActor.run {
+                    self.dialogId = dialogModel.dialogId
+                }
+                
+                print(self.dialogId)
+                
+                var params: [String: String] = [:]
+                
+                params["dialogId"] = String(self.dialogId)
+                
+                let model = try await networkService.getMessages(model: .init(dialogId: self.dialogId, limit: nil), params: params)
+                print(model)
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+    }
+    
 //    override func viewDidAppear(_ animated: Bool) {
 //        super.viewDidAppear(animated)
 //
