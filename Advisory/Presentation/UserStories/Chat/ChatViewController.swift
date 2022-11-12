@@ -75,6 +75,38 @@ final class ChatViewController: MessagesViewController {
         configureMessageInputBar()
     }
     
+    let networkService = NetworkingService()
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        let msg = MessageNetworkModel(
+            dialogId: 1,
+            text: "Привет всем участникам Hack & Change!",
+            messageType: .widget,
+            data: "{\"widget\":\"custom data\"}",
+            mediaUrl: "https://cdn-icons-png.flaticon.com/512/945/945244.png"
+        )
+        let message = SendMessageRequestNetworkModel(message: msg)
+        
+        Task {
+            do {
+                let requestModel = AuthenticationRequestNetworkModel(
+                    login: "testUser",
+                    password: "872e4e50ce9990d8b041330c47c9ddd11bec6b503ae9386a99da8584e9bb12c4"
+                )
+                let authResponse = try await networkService.authorize(model: requestModel)
+                print(authResponse.jwtToken)
+                
+                let sendResponse = try await networkService.sendMessage(model: message)
+                print(sendResponse)
+                
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+     }
+    
     // MARK: - Actions
     
     @objc
