@@ -18,10 +18,14 @@ final class PDFPresenter {
     private let router: IPDFRouter
     weak var view: IPDFView?
     
+    // Private
+    private let url: URL
+    
     // MARK: - Initialization
     
-    init(router: IPDFRouter) {
+    init(router: IPDFRouter, url: URL) {
         self.router = router
+        self.url = url
     }
     
     // MARK: - Private
@@ -29,7 +33,7 @@ final class PDFPresenter {
     private func downloadPDF() {
         view?.shouldActivityIndicatorWorking(true)
         DispatchQueue.global(qos: .userInteractive).async {
-            let document = PDFDocument(url: URL(string: "http://www.pdf995.com/samples/pdf.pdf")!)
+            let document = PDFDocument(url: self.url)
             DispatchQueue.main.async {
                 self.view?.configure(with: .init(document: document))
                 self.view?.shouldActivityIndicatorWorking(false)

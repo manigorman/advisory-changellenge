@@ -8,7 +8,7 @@
 import UIKit
 
 protocol IChatRouter: AnyObject {
-    func showPDF()
+    func showPDF(with url: URL)
 }
 
 final class ChatRouter: IChatRouter {
@@ -19,9 +19,9 @@ final class ChatRouter: IChatRouter {
     
     // MARK: - IPDFRouter
     
-    func showPDF() {
+    func showPDF(with url: URL) {
         let assembly = PDFAssembly()
-        let controller = assembly.assemble()
+        let controller = assembly.assemble(url: url)
         transitionHandler?.navigationController?.pushViewController(controller, animated: true)
     }
 }

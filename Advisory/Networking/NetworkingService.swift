@@ -8,12 +8,12 @@
 import Foundation
 
 actor NetworkingService {
-    static private var token: String = ""
+    private var token: String = UserDefaults.standard.string(forKey: "JWTToken") ?? ""
     
     private let networkCaller = NetworkingServiceStrategy()
     
     func changeToken(_ token: String) {
-        Self.token = token
+        self.token = token
     }
     
     // MARK: - API
@@ -24,7 +24,7 @@ actor NetworkingService {
                                     SendMessageResponseNetworkModel>(requestModel: model,
                                                                      httpMethodType: .post,
                                                                      path: "message/send",
-                                                                     token: Self.token)
+                                                                     token: self.token)
         
         return try await networkCaller.performNetworkRequest(with: resource)
     }
@@ -42,6 +42,8 @@ actor NetworkingService {
         
         let responseModel = try await networkCaller.performNetworkRequest(with: resource)
         
+        UserDefaults.standard.set(String(responseModel.userId), forKey: "UserId")
+        UserDefaults.standard.set(String(responseModel.jwtToken), forKey: "JWTToken")
         changeToken(responseModel.jwtToken)
         return responseModel
     }
@@ -52,7 +54,7 @@ actor NetworkingService {
             httpMethodType: .get,
             params: params,
             path: "chat/history",
-            token: Self.token,
+            token: self.token,
             shouldUseParams: true
         )
         
@@ -64,10 +66,8 @@ actor NetworkingService {
             requestModel: nil,
             httpMethodType: .get,
             path: "chat/dialog",
-            token: Self.token
+            token: self.token
         )
-        
-        print(Self.token)
         
         return try await networkCaller.performNetworkRequest(with: resource)
     }
@@ -77,7 +77,7 @@ actor NetworkingService {
             requestModel: model,
             httpMethodType: .post,
             path: "chat/message/update",
-            token: Self.token
+            token: self.token
         )
         
         try await networkCaller.performNetworkRequestWithoutResponseModel(with: resource)

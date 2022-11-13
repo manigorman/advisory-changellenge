@@ -84,8 +84,6 @@ final class PDFViewController: UIViewController {
 extension PDFViewController: IPDFView {
     func configure(with model: Model) {
         guard let document = model.document else {
-            //            showLabel()
-            print("!!!!!")
             return
         }
         

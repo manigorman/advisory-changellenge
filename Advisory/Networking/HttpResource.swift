@@ -40,7 +40,6 @@ struct HttpResource<RequestModel: Encodable, ResponseModel>: Resource {
         if let token = token {
             finalHeaders["Authorization"] = "Bearer \(token)"
         }
-        // TODO: add params to header
         
         self.request = { [baseUrl] in
             let url = baseUrl.appendingPathComponent(path)

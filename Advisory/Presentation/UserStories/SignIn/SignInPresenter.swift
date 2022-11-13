@@ -30,17 +30,15 @@ final class LogInPresenter {
 // MARK: - ILogInPresenter
 
 extension LogInPresenter: ILogInPresenter {
-     
+    
     func didTapLogIn(login: String, password: String) {
         
         view?.shouldActivityIndicatorWorking(true)
         
         Task {
             do {
-                let token = try await networkingService.authorize(model: .init(login: login,
-                                                                               password: password))
-                
-                print(token)
+                try await networkingService.authorize(model: .init(login: login,
+                                                                   password: password))
                 
                 await MainActor.run {
                     coordinator.showTab()

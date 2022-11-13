@@ -11,11 +11,11 @@ final class PDFAssembly {
     
     // MARK: - Public
     
-    func assemble() -> UIViewController {
+    func assemble(url: URL) -> UIViewController {
         
         let router = PDFRouter()
         
-        let presenter = PDFPresenter(router: router)
+        let presenter = PDFPresenter(router: router, url: url)
         
         let controller = PDFViewController(presenter: presenter)
         

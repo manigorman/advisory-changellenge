@@ -8,14 +8,16 @@
 import UIKit
 import MessageKit
 import InputBarAccessoryView
+import SnapKit
 import PDFKit
 
 protocol IChatView: AnyObject {
     func configure(with model: ChatViewController.Model)
+    func addMessages(with messages: [Message])
+    func shouldActivityIndicatorWorking(_ flag: Bool)
 }
 
-let advisor = User(senderId: "100395", displayName: "Advisor")
-let me = User(senderId: "0", displayName: "Me")
+let me = User(senderId: UserDefaults.standard.string(forKey: "UserId") ?? "", displayName: "Me")
 
 final class ChatViewController: MessagesViewController {
     
@@ -31,7 +33,7 @@ final class ChatViewController: MessagesViewController {
     
     let networkService = NetworkingService()
     
-    var dialogId = -1
+    var dialogId = UserDefaults.standard.integer(forKey: "DialogId")
     
     // UI
     private(set) lazy var refreshControl: UIRefreshControl = {
@@ -39,6 +41,8 @@ final class ChatViewController: MessagesViewController {
         control.addTarget(self, action: #selector(loadMoreMessages), for: .valueChanged)
         return control
     }()
+    
+    private lazy var indicator = UIActivityIndicatorView(style: .large)
     
     // MARK: - Initialization
     
@@ -68,17 +72,9 @@ final class ChatViewController: MessagesViewController {
     
     // MARK: - Actions
     
-    @objc
-    func loadMoreMessages() {
-//        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 1) {
-//            SampleData.shared.getMessages(count: 20) { messages in
-//                DispatchQueue.main.async {
-//                    self.messageList.insert(contentsOf: messages, at: 0)
-//                    self.messagesCollectionView.reloadDataAndKeepOffset()
-//                    self.refreshControl.endRefreshing()
-//                }
-//            }
-//        }
+    @objc func loadMoreMessages() {
+        //        presenter.refreshMessages(timestamp: Double(messages.first!.sentDate.millisecondsSince1970), older: true)
+        //        print(Double(messages.first!.sentDate.millisecondsSince1970))
     }
     
     // MARK: - Private
@@ -123,11 +119,11 @@ final class ChatViewController: MessagesViewController {
     }
     
     func cellTopLabelAttributedText(for message: MessageType, at indexPath: IndexPath) -> NSAttributedString? {
-        if indexPath.section % 3 == 0 {
+        if indexPath.section % 5 == 0 {
             return NSAttributedString(
                 string: DateFormatter.ruRuLong(message.sentDate).string(from: message.sentDate),
                 attributes: [
-                    NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 10),
+                    NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 12),
                     NSAttributedString.Key.foregroundColor: UIColor.darkGray])
         }
         return nil
@@ -166,8 +162,35 @@ final class ChatViewController: MessagesViewController {
 // MARK: - IConversationView
 
 extension ChatViewController: IChatView {
+    func shouldActivityIndicatorWorking(_ flag: Bool) {
+        if flag {
+            indicator.startAnimating()
+        } else {
+            indicator.stopAnimating()
+        }
+    }
+    
     func configure(with model: Model) {
         self.messages = model.messages
+        self.messages.append(Message(image: UIImage(systemName: "person.fill") ?? UIImage(),
+                                     user: User(senderId: "2323223", displayName: ""),
+                                     messageId: UUID().uuidString,
+                                     date: Date()))
+        self.messages.append(Message(linkItem: MockLinkItem(text: "Прикрепляю документ на подписание",
+                                                            attributedText: nil,
+                                                            url: URL(string: "http://www.pdf995.com/samples/pdf.pdf")!,
+                                                            title: "Договор банка Открытие",
+                                                            teaser: "",
+                                                            thumbnailImage: PDFService().generatePDFThumbnail(of: CGSize(width: 120,
+                                                                                                                         height: 120),
+                                                                                                              for: URL(string: "http://www.pdf995.com/samples/pdf.pdf")!)!),
+                                     user: User(senderId: "2323223", displayName: ""), messageId: UUID().uuidString, date: Date()))
+        messagesCollectionView.reloadData()
+        messagesCollectionView.scrollToLastItem()
+    }
+    
+    func addMessages(with messages: [Message]) {
+        self.messages.insert(contentsOf: messages, at: 0)
         messagesCollectionView.reloadData()
     }
 }
@@ -218,14 +241,14 @@ extension ChatViewController: MessagesDisplayDelegate {
 
 extension ChatViewController: MessagesLayoutDelegate {
     func cellTopLabelHeight(for _: MessageType, at _: IndexPath, in _: MessagesCollectionView) -> CGFloat {
-        20
+        10
     }
     
     func cellBottomLabelHeight(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> CGFloat {
-        0
+        10
     }
     func messageTopLabelHeight(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> CGFloat {
-        0
+        16
     }
     func messageBottomLabelHeight(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> CGFloat {
         0
@@ -243,12 +266,7 @@ extension ChatViewController: InputBarAccessoryViewDelegate {
     func processInputBar(_ inputBar: InputBarAccessoryView) {
         let attributedText = inputBar.inputTextView.attributedText!
         let range = NSRange(location: 0, length: attributedText.length)
-        attributedText.enumerateAttribute(.autocompleted, in: range, options: []) { _, range, _ in
-            
-            let substring = attributedText.attributedSubstring(from: range)
-            let context = substring.attribute(.autocompletedContext, at: 0, effectiveRange: nil)
-            print("Autocompleted: `", substring, "` with context: ", context ?? [])
-        }
+        attributedText.enumerateAttribute(.autocompleted, in: range, options: []) {_, _, _ in }
         
         let components = inputBar.inputTextView.components
         inputBar.inputTextView.text = String()
@@ -259,8 +277,6 @@ extension ChatViewController: InputBarAccessoryViewDelegate {
         // Resign first responder for iPad split view
         inputBar.inputTextView.resignFirstResponder()
         DispatchQueue.global(qos: .default).async {
-            // fake send request task
-            //            sleep(1)
             DispatchQueue.main.async { [weak self] in
                 inputBar.sendButton.stopAnimating()
                 inputBar.inputTextView.placeholder = "Aa"
@@ -286,36 +302,18 @@ extension ChatViewController: InputBarAccessoryViewDelegate {
 }
 
 extension ChatViewController: MessageCellDelegate {
-    func didTapAvatar(in _: MessageCollectionViewCell) {
-        print("Avatar tapped")
-    }
     
-    func didTapMessage(in _: MessageCollectionViewCell) {
-        print("Message tapped")
-        presenter.didTapPDF()
+    func didTapMessage(in cell: MessageCollectionViewCell) {
+        guard let indexPath = messagesCollectionView.indexPath(for: cell),
+              let message = messagesCollectionView.messagesDataSource?.messageForItem(at: indexPath, in: messagesCollectionView) else {
+            return
+        }
+        if case MessageKind.linkPreview(let item) = message.kind {
+            presenter.didTapPDF(with: item.url)
+        }
     }
     
     func didTapImage(in _: MessageCollectionViewCell) {
         print("Image tapped")
-    }
-    
-    func didTapCellTopLabel(in _: MessageCollectionViewCell) {
-        print("Top cell label tapped")
-    }
-    
-    func didTapCellBottomLabel(in _: MessageCollectionViewCell) {
-        print("Bottom cell label tapped")
-    }
-    
-    func didTapMessageTopLabel(in _: MessageCollectionViewCell) {
-        print("Top message label tapped")
-    }
-    
-    func didTapMessageBottomLabel(in _: MessageCollectionViewCell) {
-        print("Bottom label tapped")
-    }
-    
-    func didTapAccessoryView(in _: MessageCollectionViewCell) {
-        print("Accessory view tapped")
     }
 }
