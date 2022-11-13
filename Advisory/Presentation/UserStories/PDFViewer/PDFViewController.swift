@@ -34,7 +34,6 @@ final class PDFViewController: UIViewController {
         self.presenter = presenter
         
         super.init(nibName: nil, bundle: nil)
-        
     }
     
     required init?(coder: NSCoder) {
@@ -52,7 +51,7 @@ final class PDFViewController: UIViewController {
         setUpConstraints()
     }
     
-    // Private
+    // MARK: - Private
     
     private func setUpUI() {
         view.backgroundColor = BackgroundColorScheme.background
@@ -63,7 +62,6 @@ final class PDFViewController: UIViewController {
     }
     
     private func setUpConstraints() {
-        
         view.addSubview(contentView)
         contentView.snp.makeConstraints {
             $0.top.equalTo(view.safeAreaLayoutGuide.snp.top)

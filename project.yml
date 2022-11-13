@@ -4,7 +4,7 @@ options:
   bundleIdPrefix: com.manigorman
   xcodeVersion: 13.3.1
   deploymentTarget:
-    iOS: '14.0'
+    iOS: '15.0'
   groupSortPosition: top
   generateEmptyDirectories: true
 

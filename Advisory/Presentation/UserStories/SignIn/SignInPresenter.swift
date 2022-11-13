@@ -8,8 +8,7 @@
 import UIKit
 
 protocol ILogInPresenter: AnyObject {
-    func viewDidLoad()
-    func didTapLogIn(email: String, password: String)
+    func didTapLogIn(login: String, password: String)
 }
 
 final class LogInPresenter {
@@ -19,10 +18,6 @@ final class LogInPresenter {
     private let networkingService: NetworkingService
     private let coordinator: IAuthCoordinator
     
-    // Private
-    
-    // Models
-    
     // MARK: - Initialization
     
     init(coordinator: IAuthCoordinator,
@@ -30,31 +25,32 @@ final class LogInPresenter {
         self.coordinator = coordinator
         self.networkingService = networkingService
     }
-    
-    // MARK: - Private
 }
 
 // MARK: - ILogInPresenter
 
 extension LogInPresenter: ILogInPresenter {
-    
-    func viewDidLoad() {
-    }
      
-    func didTapLogIn(email: String, password: String) {
+    func didTapLogIn(login: String, password: String) {
         
         view?.shouldActivityIndicatorWorking(true)
         
         Task {
             do {
-                let token = try await networkingService.authorize(model: .init(login: email, password: password))
+                let token = try await networkingService.authorize(model: .init(login: login,
+                                                                               password: password))
                 
                 print(token)
                 
                 await MainActor.run {
                     coordinator.showTab()
+                    UserDefaults.standard.set(true, forKey: "IsLoggedIn")
                 }
             } catch {
+                await MainActor.run {
+                    view?.shouldActivityIndicatorWorking(false)
+                    view?.showAlert(message: "Произошла ошибка, попробуйте еще раз")
+                }
                 print(error.localizedDescription)
             }
         }

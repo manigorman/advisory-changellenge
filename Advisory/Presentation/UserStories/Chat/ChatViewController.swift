@@ -17,12 +17,6 @@ protocol IChatView: AnyObject {
 let advisor = User(senderId: "100395", displayName: "Advisor")
 let me = User(senderId: "0", displayName: "Me")
 
-func generatePDFThumbnail(of thumbnailSize: CGSize, for documentURL: URL) -> UIImage? {
-    let pdfDocument = PDFDocument(url: documentURL)
-    let pdfDocumentPage = pdfDocument?.page(at: 0)
-    return pdfDocumentPage?.thumbnail(of: thumbnailSize, for: PDFDisplayBox.trimBox)
-}
-
 final class ChatViewController: MessagesViewController {
     
     struct Model {
@@ -35,13 +29,16 @@ final class ChatViewController: MessagesViewController {
     // Private
     private var messages: [Message] = []
     
+    let networkService = NetworkingService()
+    
+    var dialogId = -1
+    
+    // UI
     private(set) lazy var refreshControl: UIRefreshControl = {
         let control = UIRefreshControl()
         control.addTarget(self, action: #selector(loadMoreMessages), for: .valueChanged)
         return control
     }()
-    
-    // UI
     
     // MARK: - Initialization
     
@@ -69,35 +66,26 @@ final class ChatViewController: MessagesViewController {
         configureMessageInputBar()
     }
     
-    let networkService = NetworkingService()
-    
-    var dialogId = -1
-    
-    @MainActor
-    func foo() {
-        
-    }
-    
     // MARK: - Actions
     
     @objc
     func loadMoreMessages() {
-        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 1) {
-            //        SampleData.shared.getMessages(count: 20) { messages in
-            //          DispatchQueue.main.async {
-            //            self.messageList.insert(contentsOf: messages, at: 0)
-            //            self.messagesCollectionView.reloadDataAndKeepOffset()
-            //            self.refreshControl.endRefreshing()
-            //          }
-            //        }
-        }
+//        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 1) {
+//            SampleData.shared.getMessages(count: 20) { messages in
+//                DispatchQueue.main.async {
+//                    self.messageList.insert(contentsOf: messages, at: 0)
+//                    self.messagesCollectionView.reloadDataAndKeepOffset()
+//                    self.refreshControl.endRefreshing()
+//                }
+//            }
+//        }
     }
     
     // MARK: - Private
     
     private func setUpUI() {
         navigationItem.largeTitleDisplayMode = .never
-        navigationItem.title = "Центр заботы о клиентах"
+        navigationItem.title = "Advisory"
         
         view.backgroundColor = BackgroundColorScheme.background
         messagesCollectionView.backgroundColor = BackgroundColorScheme.background
@@ -199,9 +187,9 @@ extension ChatViewController: MessagesDataSource {
         messages.count
     }
     
-//    func customCell(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> UICollectionViewCell {
-//        return UICollectionViewCell(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
-//    }
+    //    func customCell(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> UICollectionViewCell {
+    //        return UICollectionViewCell(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+    //    }
 }
 
 // MARK: - MessagesDisplayDelegate
@@ -230,22 +218,29 @@ extension ChatViewController: MessagesDisplayDelegate {
 
 extension ChatViewController: MessagesLayoutDelegate {
     func cellTopLabelHeight(for _: MessageType, at _: IndexPath, in _: MessagesCollectionView) -> CGFloat {
-        16
+        20
+    }
+    
+    func cellBottomLabelHeight(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> CGFloat {
+        0
+    }
+    func messageTopLabelHeight(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> CGFloat {
+        0
+    }
+    func messageBottomLabelHeight(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> CGFloat {
+        0
     }
 }
 
 // MARK: - InputBarAccessoryViewDelegate
 
 extension ChatViewController: InputBarAccessoryViewDelegate {
-    // MARK: Internal
     
-    @objc
-    func inputBar(_: InputBarAccessoryView, didPressSendButtonWith _: String) {
+    @objc func inputBar(_: InputBarAccessoryView, didPressSendButtonWith _: String) {
         processInputBar(messageInputBar)
     }
     
     func processInputBar(_ inputBar: InputBarAccessoryView) {
-        // Here we can parse for which substrings were autocompleted
         let attributedText = inputBar.inputTextView.attributedText!
         let range = NSRange(location: 0, length: attributedText.length)
         attributedText.enumerateAttribute(.autocompleted, in: range, options: []) { _, range, _ in
@@ -265,7 +260,7 @@ extension ChatViewController: InputBarAccessoryViewDelegate {
         inputBar.inputTextView.resignFirstResponder()
         DispatchQueue.global(qos: .default).async {
             // fake send request task
-            sleep(1)
+            //            sleep(1)
             DispatchQueue.main.async { [weak self] in
                 inputBar.sendButton.stopAnimating()
                 inputBar.inputTextView.placeholder = "Aa"
@@ -274,8 +269,6 @@ extension ChatViewController: InputBarAccessoryViewDelegate {
             }
         }
     }
-    
-    // MARK: Private
     
     private func insertMessages(_ data: [Any]) {
         for component in data {

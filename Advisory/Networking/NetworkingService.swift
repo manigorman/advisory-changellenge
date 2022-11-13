@@ -42,7 +42,7 @@ actor NetworkingService {
         
         let responseModel = try await networkCaller.performNetworkRequest(with: resource)
         
-        Self.token = responseModel.jwtToken
+        changeToken(responseModel.jwtToken)
         return responseModel
     }
     
@@ -66,6 +66,8 @@ actor NetworkingService {
             path: "chat/dialog",
             token: Self.token
         )
+        
+        print(Self.token)
         
         return try await networkCaller.performNetworkRequest(with: resource)
     }

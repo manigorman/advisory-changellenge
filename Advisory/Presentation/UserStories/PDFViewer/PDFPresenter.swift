@@ -16,7 +16,6 @@ final class PDFPresenter {
     
     // Dependencies
     private let router: IPDFRouter
-    
     weak var view: IPDFView?
     
     // MARK: - Initialization
@@ -25,7 +24,7 @@ final class PDFPresenter {
         self.router = router
     }
     
-    // Private
+    // MARK: - Private
     
     private func downloadPDF() {
         view?.shouldActivityIndicatorWorking(true)
@@ -36,12 +35,10 @@ final class PDFPresenter {
                 self.view?.shouldActivityIndicatorWorking(false)
             }
         }
-            
     }
-        
 }
 
-// IConversationPresenter
+// MARK: - IConversationPresenter
 
 extension PDFPresenter: IPDFPresenter {
     func viewDidLoad() {

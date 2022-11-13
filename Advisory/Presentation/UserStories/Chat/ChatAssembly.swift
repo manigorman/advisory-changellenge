@@ -16,9 +16,11 @@ final class ChatAssembly {
         let router = ChatRouter()
         
         let networkingService = NetworkingService()
+        let pdfService = PDFService()
         
         let presenter = ChatPresenter(router: router,
-        networkingService: networkingService)
+                                      networkingService: networkingService,
+                                      pdfService: pdfService)
         
         let controller = ChatViewController(presenter: presenter)
         
