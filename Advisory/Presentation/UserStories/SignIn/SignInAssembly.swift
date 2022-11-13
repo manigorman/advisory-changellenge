@@ -16,7 +16,7 @@ final class LogInAssembly {
         let networkingService = NetworkingService()
         
         let presenter = LogInPresenter(coordinator: authCoordinator,
-        networkingService: networkingService)
+                                       networkingService: networkingService)
         
         let controller = LogInViewController(presenter: presenter)
         

@@ -16,7 +16,7 @@ final class AppCoordinator: Coordinator {
     
     var navigationController: UINavigationController
     
-    var isLoggedIn: Bool = false
+    var isLoggedIn: Bool = UserDefaults.standard.bool(forKey: "IsLoggedIn")
     
     init(_ navigationController: UINavigationController) {
         self.navigationController = navigationController
@@ -50,13 +50,6 @@ final class AppCoordinator: Coordinator {
 // MARK: - IAppCoordinator
 
 extension AppCoordinator: IAppCoordinator {
-    func logOut() {
-        navigationController.viewControllers.removeAll()
-        for coordinator in childCoordinators {
-            coordinator.finish()
-        }
-        //        showAuth()
-    }
     
     func logIn() {
         navigationController.viewControllers.removeAll()

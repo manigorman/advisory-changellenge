@@ -10,8 +10,8 @@ import Foundation
 extension DateFormatter {
     static let mediumFormatter: DateFormatter = {
         let dateFormatter = DateFormatter()
-        dateFormatter.dateStyle = .medium
-        dateFormatter.timeStyle = .medium
+        dateFormatter.dateStyle = .short
+        dateFormatter.timeStyle = .short
         dateFormatter.locale = Locale(identifier: "ru_RU")
         
         return dateFormatter

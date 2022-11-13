@@ -9,9 +9,8 @@ import UIKit
 import SnapKit
 
 protocol ILogInView: AnyObject {
-    func update()
     func shouldActivityIndicatorWorking(_ flag: Bool)
-//    func showAlert(message: String)
+    func showAlert(message: String)
 }
 
 final class LogInViewController: UIViewController {
@@ -25,7 +24,7 @@ final class LogInViewController: UIViewController {
     private lazy var scrollView = UIScrollView()
     private lazy var contentView = UIView()
     private lazy var label = UILabel()
-    private lazy var emailField = UITextField()
+    private lazy var loginField = UITextField()
     private lazy var passwordField = UITextField()
     private lazy var button = UIButton()
     private lazy var indicator = UIActivityIndicatorView(style: .large)
@@ -37,8 +36,14 @@ final class LogInViewController: UIViewController {
         
         super.init(nibName: nil, bundle: nil)
         
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(keyboardWillShow),
+                                               name: UIResponder.keyboardWillShowNotification,
+                                               object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(keyboardWillHide),
+                                               name: UIResponder.keyboardWillHideNotification,
+                                               object: nil)
     }
     
     required init?(coder: NSCoder) {
@@ -50,8 +55,6 @@ final class LogInViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        presenter.viewDidLoad()
-        
         setUpUI()
         setUpConstraints()
         setUpDelegates()
@@ -61,19 +64,15 @@ final class LogInViewController: UIViewController {
     
     @objc private func logInButtonTapped() {
         
-        guard let email = emailField.text,
+        guard let login = loginField.text,
               let password = passwordField.text,
-              !email.isEmpty,
+              !login.isEmpty,
               !password.isEmpty else {
-//            self.alertInfoError()
+            alertInfoError()
             return
         }
         
-        presenter.didTapLogIn(email: email, password: password)
-    }
-    
-    @objc private func helpButtonTapped() {
-        print("help")
+        presenter.didTapLogIn(login: login, password: password)
     }
     
     @objc private func keyboardWillShow(notification: NSNotification) {
@@ -110,19 +109,18 @@ final class LogInViewController: UIViewController {
         view.backgroundColor = .systemBackground
         title = "Log in"
         
-        label.text = "Fill in a username and password to enter the Open Investments App"
+        label.text = "Введите логин и пароль для входа в Открытие Инвестиции"
         label.font = UIFont.systemFont(ofSize: 15)
         label.textColor = TextColorScheme.foreground2
         label.numberOfLines = 2
         
-        emailField.autocapitalizationType = .none
-        emailField.autocorrectionType = .no
-        emailField.returnKeyType = .continue
-        emailField.backgroundColor = BackgroundColorScheme.background
-        emailField.layer.cornerRadius = 8
-        emailField.placeholder = "Email"
-        emailField.setLeftPaddingPoints(12)
-        emailField.setRightPaddingPoints(12)
+        loginField.autocapitalizationType = .none
+        loginField.autocorrectionType = .no
+        loginField.returnKeyType = .continue
+        loginField.backgroundColor = BackgroundColorScheme.background
+        loginField.layer.cornerRadius = 8
+        loginField.placeholder = "Login"
+        loginField.setLeftPaddingPoints(12)
         
         passwordField.autocapitalizationType = .none
         passwordField.autocorrectionType = .no
@@ -132,7 +130,6 @@ final class LogInViewController: UIViewController {
         passwordField.layer.cornerRadius = 8
         passwordField.isSecureTextEntry = true
         passwordField.setLeftPaddingPoints(12)
-        passwordField.setRightPaddingPoints(12)
         
         button.setTitle("Log In", for: .normal)
         button.addTarget(self, action: #selector(logInButtonTapped), for: .touchUpInside)
@@ -162,8 +159,8 @@ final class LogInViewController: UIViewController {
             $0.leading.trailing.equalToSuperview()
         }
         
-        contentView.addSubview(emailField)
-        emailField.snp.makeConstraints {
+        contentView.addSubview(loginField)
+        loginField.snp.makeConstraints {
             $0.top.equalTo(label.snp.bottom).offset(20)
             $0.leading.trailing.equalToSuperview()
             $0.height.equalTo(40)
@@ -171,7 +168,7 @@ final class LogInViewController: UIViewController {
         
         contentView.addSubview(passwordField)
         passwordField.snp.makeConstraints {
-            $0.top.equalTo(emailField.snp.bottom).offset(20)
+            $0.top.equalTo(loginField.snp.bottom).offset(20)
             $0.leading.trailing.equalToSuperview()
             $0.height.equalTo(40)
         }
@@ -192,19 +189,14 @@ final class LogInViewController: UIViewController {
     }
     
     private func setUpDelegates() {
-        emailField.delegate = self
+        loginField.delegate = self
         passwordField.delegate = self
-    }
-    
-    @objc private func googleSignIn() {
     }
 }
 
 // MARK: - ILogInView
 
 extension LogInViewController: ILogInView {
-    func update() {
-    }
     
     func shouldActivityIndicatorWorking(_ flag: Bool) {
         if flag {
@@ -213,6 +205,10 @@ extension LogInViewController: ILogInView {
             indicator.stopAnimating()
         }
     }
+    
+    func showAlert(message: String) {
+        self.alertInfoError(message: message)
+    }
 }
 
 // MARK: - UITextFieldDelegate
@@ -220,7 +216,7 @@ extension LogInViewController: ILogInView {
 extension LogInViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         switch textField {
-        case emailField:
+        case loginField:
             textField.resignFirstResponder()
             passwordField.becomeFirstResponder()
         default:

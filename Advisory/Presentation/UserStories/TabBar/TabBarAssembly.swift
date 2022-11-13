@@ -28,7 +28,10 @@ final class TabBarAssembly {
         return controller
     }
     
-    func createNavController(with vc: UIViewController, selected: UIImage?, unselected: UIImage?, title: String) -> UINavigationController {
+    func createNavController(with vc: UIViewController,
+                             selected: UIImage?,
+                             unselected: UIImage?,
+                             title: String) -> UINavigationController {
         let viewController = vc
         let navController = UINavigationController(rootViewController: viewController)
         navController.tabBarItem.image = unselected
